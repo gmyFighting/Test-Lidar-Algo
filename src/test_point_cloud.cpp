@@ -25,19 +25,19 @@ int main(int argc, char *argv[]) {
     // std::deque<GNSSData> gnss_data_buff;
 
     // 根据KITTI cali文件获得lidar到imu的坐标变换
-    // Eigen::MatrixXd T_lidar2imu = Eigen::MatrixXd::Identity(4, 4);
-    // Eigen::Matrix3d R_imu2lidar;
-    // Eigen::Vector3d t_imu2lidar(-8.086759e-01, 3.195559e-01, -7.997231e-01);
+    Eigen::MatrixXd T_lidar2imu = Eigen::MatrixXd::Identity(4, 4);
+    Eigen::Matrix3d R_imu2lidar;
+    Eigen::Vector3d t_imu2lidar(-8.086759e-01, 3.195559e-01, -7.997231e-01);
 
-    // R_imu2lidar <<  9.999976e-01, 7.553071e-04, -2.035826e-03,
-    //                -7.854027e-04, 9.998898e-01, -1.482298e-02,
-    //                 2.024406e-03, 1.482454e-02,  9.998881e-01;
-    // t_imu2lidar = -R_imu2lidar.transpose() * t_imu2lidar;
-    // T_lidar2imu.block<3, 3>(0, 0) = R_imu2lidar.transpose();
-    // T_lidar2imu.block<3, 1>(0, 3) = t_imu2lidar;
-    // std::cout << T_lidar2imu << std::endl;
-    // bool transform_received = false;
-    // bool gnss_origin_position_inited = false;
+    R_imu2lidar <<  9.999976e-01, 7.553071e-04, -2.035826e-03,
+                   -7.854027e-04, 9.998898e-01, -1.482298e-02,
+                    2.024406e-03, 1.482454e-02,  9.998881e-01;
+    t_imu2lidar = -R_imu2lidar.transpose() * t_imu2lidar;
+    T_lidar2imu.block<3, 3>(0, 0) = R_imu2lidar.transpose();
+    T_lidar2imu.block<3, 1>(0, 3) = t_imu2lidar;
+    std::cout << T_lidar2imu << std::endl;
+    bool transform_received = false;
+    bool gnss_origin_position_inited = false;
 
     ros::Rate rate(100);
     while (ros::ok()) {
