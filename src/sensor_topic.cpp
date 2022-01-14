@@ -3,6 +3,7 @@
 #include <pcl/point_types.h>
 #include <pcl/point_cloud.h>
 #include <pcl_conversions/pcl_conversions.h>
+#include <Eigen/Core>
 
 #include "Test-Lidar-Algo/sensor_topic.hpp"
 #include "Test-Lidar-Algo/sensor_type.hpp"
@@ -69,5 +70,45 @@ void ImuSubscriber::imuHandler(const sensor_msgs::ImuConstPtr& imu_msg_ptr)
     // std::cout << "find a imu\n";
 }
 
+CloudPublisher::CloudPublisher(ros::NodeHandle &nh, const std::string &topic_name, const size_t &buff_size, const std::string &frame_id)
+    : frame_id_(frame_id) {
+    publisher_ = nh.advertise<sensor_msgs::PointCloud2>(topic_name, buff_size);
+}
 
+void CloudPublisher::Publish(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_ptr_input) {
+    sensor_msgs::PointCloud2Ptr cloud_ptr_output(new sensor_msgs::PointCloud2());
+    pcl::toROSMsg(*cloud_ptr_input, *cloud_ptr_output);
+    cloud_ptr_output->header.stamp = ros::Time::now();
+    cloud_ptr_output->header.frame_id = frame_id_;
+    publisher_.publish(*cloud_ptr_output);
+}
+
+OdometryPublisher::OdometryPublisher(ros::NodeHandle &nh, 
+                                     const std::string &topic_name, 
+                                     const std::string &base_frame_id,
+                                     const std::string &child_frame_id,
+                                     const int &buff_size)
+{
+    publisher_ = nh.advertise<nav_msgs::Odometry>(topic_name, buff_size);
+    odometry_.header.frame_id = base_frame_id;
+    odometry_.child_frame_id = child_frame_id;
+}
+
+void OdometryPublisher::Publish(const Eigen::Matrix4d &transform_matrix) {
+    odometry_.header.stamp = ros::Time::now();
+
+    //set the position
+    odometry_.pose.pose.position.x = transform_matrix(0,3);
+    odometry_.pose.pose.position.y = transform_matrix(1,3);
+    odometry_.pose.pose.position.z = transform_matrix(2,3);
+
+    Eigen::Quaterniond q;
+    q = transform_matrix.block<3,3>(0,0);
+    odometry_.pose.pose.orientation.x = q.x();
+    odometry_.pose.pose.orientation.y = q.y();
+    odometry_.pose.pose.orientation.z = q.z();
+    odometry_.pose.pose.orientation.w = q.w();
+
+    publisher_.publish(odometry_);
+}
 

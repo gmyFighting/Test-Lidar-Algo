@@ -6,13 +6,13 @@
 #include <sensor_msgs/Imu.h>
 #include <sensor_msgs/NavSatFix.h>
 #include <sensor_msgs/PointCloud2.h>
+#include <nav_msgs/Odometry.h>
 #include "Test-Lidar-Algo/sensor_type.hpp"
 
 class CloudSubscriber {
 public:
     CloudSubscriber(ros::NodeHandle &nh, const std::string &topic_name, const size_t &buff_size);
     CloudSubscriber() = default;
-    // void ParseData(std::deque<CloudData>& deque_cloud_data);
     std::deque<CloudData> buf_dq_;
 
 private:
@@ -46,6 +46,31 @@ private:
     ros::Subscriber subscriber_;
 };
 
+class CloudPublisher {
+public:
+    CloudPublisher(ros::NodeHandle &nh, const std::string &topic_name, const size_t &buff_size, const std::string &frame_id);
+    CloudPublisher() = default;
+    void Publish(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_ptr_input);
+private:
+    ros::Publisher publisher_;
+    std::string frame_id_;
+};
+
+class OdometryPublisher {
+  public:
+    OdometryPublisher(ros::NodeHandle &nh, 
+                      const std::string &topic_name, 
+                      const std::string &base_frame_id,
+                      const std::string &child_frame_id,
+                      const int &buff_size);
+    OdometryPublisher() = default;
+
+    void Publish(const Eigen::Matrix4d &transform_matrix);
+
+  private:
+    ros::Publisher publisher_;
+    nav_msgs::Odometry odometry_;
+};
 
 
 

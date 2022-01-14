@@ -38,7 +38,7 @@ class GNSSData {
 };
 
 class IMUData {
-  public:
+public:
     struct LinearAcceleration {
       double x = 0.0;
       double y = 0.0;
@@ -63,14 +63,12 @@ class IMUData {
     AngularVelocity angular_velocity;
     Orientation orientation;
   
-//   public:
+public:
     // 把四元数转换成旋转矩阵送出去
-    // Eigen::Matrix3f GetOrientationMatrix() {
-    //   Eigen::Quaterniond q(orientation.w, orientation.x, orientation.y, orientation.z);
-    //   Eigen::Matrix3f matrix = q.matrix().cast<float>();
-
-    //   return matrix;
-    // }
+    Eigen::Matrix3d get_matrix() {
+      Eigen::Quaterniond q(orientation.w, orientation.x, orientation.y, orientation.z);
+      return q.matrix();
+    }
 };
 
 
