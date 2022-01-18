@@ -1,3 +1,4 @@
+// 测试点云显示节点
 #include <ros/ros.h>
 #include <pcl/common/transforms.h>
 #include <iostream>
