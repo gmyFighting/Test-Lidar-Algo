@@ -7,8 +7,6 @@
 #include "Test-Lidar-Algo/sensor_type.hpp"
 #include "Test-Lidar-Algo/lidar_frond_end.hpp"
 
-Eigen::Matrix4d odometry_matrix;
-
 int main(int argc, char *argv[]) {
     ros::init(argc, argv, "lidar_odom_node");
     ros::NodeHandle nh;
@@ -24,7 +22,9 @@ int main(int argc, char *argv[]) {
         while (front_end_ptr->has_data()) {
             // 1. 读取imu gps 点云数据，利用点云时间戳同步imu/gps,若是第一帧做初始化
             front_end_ptr->read_data();
-
+            if (!front_end_ptr->data_is_valid()) {
+                continue;
+            }
             // 2. 固定原点
             if (origin_pos_inited == false) {
                 front_end_ptr->fix_origin();
@@ -32,7 +32,7 @@ int main(int argc, char *argv[]) {
                 rate.sleep();
             }
             // 3. 利用imu、gps生成gt && lidar前端流程
-            // update_lidar_odom();
+            front_end_ptr->lidar_odom_update();
         }
 
 

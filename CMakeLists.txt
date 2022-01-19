@@ -222,5 +222,5 @@ target_link_libraries(m2dgr_helper ${catkin_LIBRARIES} ${PCL_LIBRARIES})
 # add_executable(test_point_cloud src/test_point_cloud.cpp src/sensor_topic.cpp)
 # target_link_libraries(test_point_cloud ${catkin_LIBRARIES} ${PCL_LIBRARIES} ${GeographicLib_LIBRARIES})
 
-add_executable(lidar_odom_node src/lidar_odom_node.cpp src/sensor_topic.cpp src/lidar_frond_end.cpp)
+add_executable(lidar_odom_node src/lidar_odom_node.cpp src/sensor_topic.cpp src/lidar_frond_end.cpp src/components/voxel_filter.cpp src/components/cloud_registration.cpp)
 target_link_libraries(lidar_odom_node ${catkin_LIBRARIES} ${PCL_LIBRARIES} ${GeographicLib_LIBRARIES})
