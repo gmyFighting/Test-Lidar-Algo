@@ -53,8 +53,12 @@ private:
     std::deque<Frame> local_map_frames;// 局部地图
     std::deque<Frame> global_map_frames;// 全局地图
 
+    pcl::PointCloud<pcl::PointXYZ>::Ptr local_map_ptr;
+    pcl::PointCloud<pcl::PointXYZ>::Ptr global_map_ptr;
+
     bool lidar_odom_inited = false;
     double key_frame_distance;
+    int local_frame_num;
     
     bool update_map(const Frame &new_key_frame);
     bool key_frame_is_valid() {

@@ -7,6 +7,7 @@ Frond_End::Frond_End(ros::NodeHandle &nh)
     imu_sub_ptr = std::make_shared<ImuSubscriber>(nh, "imu_correct", 100000);
     gnss_sub_ptr = std::make_shared<GpsSubscriber>(nh, "gps/fix", 100000);
     key_frame_distance = 2.0;
+    local_frame_num = 20;
 }
 
 bool Frond_End::has_data()
@@ -128,36 +129,35 @@ bool Frond_End::update_map(const Frame &new_key_frame)
     // std::string file_path = data_path_ + "/key_frames/key_frame_" + std::to_string(global_map_frames_.size()) + ".pcd";
     // pcl::io::savePCDFileBinary(file_path, *new_key_frame.cloud_data.cloud_ptr);
 
-    // Frame key_frame = new_key_frame;
+    Frame key_frame = new_key_frame;
     // // 这一步的目的是为了把关键帧的点云保存下来
     // // 由于用的是共享指针，所以直接复制只是复制了一个指针而已
     // // 此时无论你放多少个关键帧在容器里，这些关键帧点云指针都是指向的同一个点云
     // key_frame.cloud_data.cloud_ptr.reset(new CloudData::CLOUD(*new_key_frame.cloud_data.cloud_ptr));
-    // CloudData::CLOUD_PTR transformed_cloud_ptr(new CloudData::CLOUD());
+    pcl::PointCloud<pcl::PointXYZ>::Ptr transformed_cloud_ptr(new pcl::PointCloud<pcl::PointXYZ>());
     
-    // // 更新局部地图
-    // local_map_frames_.push_back(key_frame);
-    // while (local_map_frames_.size() > static_cast<size_t>(local_frame_num_)) {
-    //     local_map_frames_.pop_front();
-    // }
-    // local_map_ptr_.reset(new CloudData::CLOUD());
-    // for (size_t i = 0; i < local_map_frames_.size(); ++i) {
-    //     pcl::transformPointCloud(*local_map_frames_.at(i).cloud_data.cloud_ptr, 
-    //                              *transformed_cloud_ptr, 
-    //                              local_map_frames_.at(i).pose);
-    //     *local_map_ptr_ += *transformed_cloud_ptr;
-    // }
-    // has_new_local_map_ = true;
+    // 2. 更新局部地图
+    local_map_frames.push_back(key_frame);
+    while (local_map_frames.size() > static_cast<size_t>(local_frame_num)) {
+        local_map_frames.pop_front();
+    }
+    local_map_ptr.reset(new pcl::PointCloud<pcl::PointXYZ>());
+    for (size_t i = 0; i < local_map_frames.size(); ++i) {
+        pcl::transformPointCloud(*local_map_frames.at(i).cloud_data.cloud_ptr, 
+                                 *transformed_cloud_ptr, 
+                                 local_map_frames.at(i).pose);
+        *local_map_ptr += *transformed_cloud_ptr;
+    }
 
-    // // 更新ndt匹配的目标点云
-    // // 关键帧数量还比较少时不滤波，太稀疏影响匹配效果
-    // if (local_map_frames.size() < 10) {
-    //     registration_method.set_input_target(local_map_ptr_);// 设置目标点云(输入点云进行仿射变换得到目标点云)
-    // } else {
-    //     CloudData::CLOUD_PTR filtered_local_map_ptr(new CloudData::CLOUD());
-    //     local_map_filter_ptr_->Filter(local_map_ptr_, filtered_local_map_ptr);
-    //     registration_method.set_input_target(filtered_local_map_ptr);
-    // }
+    // 3. 设置目标点云(输入点云进行仿射变换得到目标点云)
+    // 关键帧数量还比较少时不滤波，太稀疏影响匹配效果
+    if (local_map_frames.size() < 10) {
+        registration_method.set_input_target(local_map_ptr);
+    } else {
+        pcl::PointCloud<pcl::PointXYZ>::Ptr filtered_local_map_ptr(new pcl::PointCloud<pcl::PointXYZ>());
+        voxel_filter.filter(local_map_ptr, filtered_local_map_ptr);
+        registration_method.set_input_target(filtered_local_map_ptr);
+    }
 
     // // 保存所有关键帧信息在容器里
     // // 存储之前，点云要先释放，因为已经存到了硬盘里，不释放也达不到节省内存的目的
